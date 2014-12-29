@@ -29,6 +29,9 @@ class ComplianceAPIClient
 
                 :run_mode,
                 :start_time, :end_time,
+
+                :use_start_file, :start_time_file,
+                :initial_go_back, #in hours. If start_time set to 'file', and file doesn't exist, go back this far on initial run.
                 :sleep_time, #in seconds.
                 :query_length, #in seconds.
 
@@ -53,7 +56,8 @@ class ComplianceAPIClient
     #Defaults.
     @publisher = "twitter"
     @run_mode = "one_time"
-
+    @start_time_file = './start_time.dat'
+    @initial_go_back = 24
     @sleep_time = 10
     @time_offset = 600
     @query_length = 600
@@ -77,6 +81,13 @@ class ComplianceAPIClient
     @logger = logger
   end
 
+  def write_start_time
+    #Take the current end_time and write it out to start_time_file.
+    f = File.open(@start_time_file, 'w')
+    f.write(@end_time.strftime('%F %H:%M'))
+    f.close
+  end
+
   def run
     @logger.debug "Running..."
 
@@ -84,22 +95,31 @@ class ComplianceAPIClient
 
       #No times provided? Then set defaults.
       if @start_time.nil? and @end_time.nil? then
-        @start_time.utc = Time.now - @query_length - COMPLIANCE_MIN_LATENCY
+        @start_time.utc = Time.now.utc - @query_length - COMPLIANCE_MIN_LATENCY
         @end_time.utc = @start_time + @query_length
+      elsif @end_time.nil?
+        @start_time = Time.parse("#{@start_time}Z")
+        @end_time = @start_time + @query_length
       else
         @start_time = Time.parse("#{@start_time}Z")
         @end_time = Time.parse("#{@start_time}Z")
       end
 
-      while true
-        make_request(@start_time, @end_time)
+      #Hold-off if needed before initial run.
+      while Time.now.utc < (@end_time + @query_length + COMPLIANCE_MIN_LATENCY)
+        sleep 30
+      end
 
-         while Time.now < (@end_time + @query_length + COMPLIANCE_MIN_LATENCY)
+      while true
+        make_request(@start_time, @end_time) if Time.now.utc < (@end_time + @query_length + COMPLIANCE_MIN_LATENCY)
+
+        while Time.now.utc < (@end_time + @query_length + COMPLIANCE_MIN_LATENCY)
           sleep @sleep_time
         end
 
         @start_time = @end_time
         @end_time = @start_time + @query_length
+
       end
     else
       make_request(@start_time, @end_time)
@@ -129,6 +149,10 @@ class ComplianceAPIClient
 
     if response.code != "200" then
       logger.error("Error #{response.code} response code from Compliance API.")
+    else
+      if @use_start_file then
+        write_start_time
+      end
     end
 
     write_data data, @start_time, @end_time
@@ -210,6 +234,7 @@ class ComplianceAPIClient
     #App settings.
     @run_mode = config['app']['run_mode']
     @start_time = config['app']['start_time']
+    @initial_go_back = config['app']['initial_go_back']
     @end_time = config['app']['end_time']
     @sleep_time = config['app']['sleep_time_in_seconds']
     @time_offset = config['app']['time_offset_in_seconds']
@@ -306,46 +331,46 @@ class ComplianceAPIClient
 
   end
 
-
-
 end
 
+#-------------------------------------------------------------------------------------------------------------------
+#Options:
+#  Pass in nothing, look locally for configuration file.
+#  Pass in configuration file.
+#  Pass in selected parameters on command-line:
+#       outbox
+#       start time
+#       end time
+
+#Example command-lines:
+# $ruby ./compliance_api.rb
+# $ruby ./compliance_api.rb -c "./ComplianceConfig.yaml"
+# $ruby ./compliance_api.rb -c "./ComplianceConfig.yaml" -s "2013-10-18 06:00" -e "2013-10-20 06:00"
+# $ruby ./compliance_api.rb -s "2013-10-18 06:00" -e "2013-10-20 06:00"
+
+#Compliance API object init has base-line defaults.
+#Next looks for local config.yaml, and overwrites with anything provided there.
+#Finally, takes passed in command-line parameters, overwriting
+
+
+#-------------------------------------------------------------------------------------------------------------------
 
 #=======================================================================================================================
 if __FILE__ == $0  #This script code is executed when running this file.
 
 
 
-  #-------------------------------------------------------------------------------------------------------------------
-  #Options:
-  #  Pass in nothing, look locally for configuration file.
-  #  Pass in configuration file.
-  #  Pass in selected parameters on command-line:
-  #       outbox
-  #       start time
-  #       end time
-
-  #Example command-lines:
-  # $ruby ./compliance_api.rb
-  # $ruby ./compliance_api.rb -c "./ComplianceConfig.yaml"
-  # $ruby ./compliance_api.rb -c "./ComplianceConfig.yaml" -s "2013-10-18 06:00" -e "2013-10-20 06:00"
-  # $ruby ./compliance_api.rb -s "2013-10-18 06:00" -e "2013-10-20 06:00"
-
-  #Compliance API object init has base-line defaults.
-  #Next looks for local config.yaml, and overwrites with anything provided there.
-  #Finally, takes passed in command-line parameters, overwriting
-
-
-  #-------------------------------------------------------------------------------------------------------------------
-
   logger = Logging.logger(STDOUT)
   logger.level = :info
-  logger.debug("Created logger")
   logger.info("Program started")
 
   #Create Compliance API object.
   logger.debug("Creating Compliance API object.")
   oComp = ComplianceAPIClient.new()
+  oComp.start_time_file = './start_time.dat'
+
+  #logger = Logger.new File.new(oComp.log_file_path)
+  oComp.logger = logger
 
   logger.debug("Passing #{ARGV.length/2} arguments on command-line")
 
@@ -398,10 +423,22 @@ if __FILE__ == $0  #This script code is executed when running this file.
   #If ISO format and length 16 then apply o.gsub!(/\W+/, '')
   #If ends in m, h, or d, then do some time.add math
 
+  read_start_time = false
+
   #Handle start date.
   #First see if it was passed in
   if !$start_time.nil? then
-    oComp.start_time = oComp.set_date_string($start_time)
+
+    if $start_time == 'file' then
+      oComp.use_start_file = true
+      if !File.exist?(oComp.start_time_file)
+        oComp.start_time = oComp.set_date_string("#{oComp.initial_go_back}h")
+      else
+        read_start_time = true
+      end
+    else
+      oComp.start_time = oComp.set_date_string($start_time)
+    end
   end
 
   #Handle end date.
@@ -410,8 +447,20 @@ if __FILE__ == $0  #This script code is executed when running this file.
     oComp.end_time = oComp.set_date_string($end_time)
   end
 
-  #logger = Logger.new File.new(oComp.log_file_path)
-  oComp.logger = logger
+
+  if oComp.start_time == 'file' then
+    oComp.use_start_file = true
+    if !File.exist?(oComp.start_time_file)
+      oComp.start_time = oComp.set_date_string("#{oComp.initial_go_back}h")
+    else
+      read_start_time = true
+    end
+  end
+
+  if read_start_time then
+    start_time_dat = File.read(oComp.start_time_file)
+    oComp.start_time = oComp.set_date_string(start_time_dat)
+  end
 
   if oComp.check_config then
     oComp.run
@@ -420,9 +469,6 @@ if __FILE__ == $0  #This script code is executed when running this file.
     logger.error 'Problem with configuration. Not running...'
   end
 end
-
-
-
 
 
 
