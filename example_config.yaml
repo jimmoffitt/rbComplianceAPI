@@ -11,18 +11,20 @@ product:
   label: dev
 
 app:
-  run_mode: real-time #one-time or real_time
-  start_time: 201412192100 #Timestamp or integer indicating minutes, or 'duration' string (12h, 14d)
-  end_time: 201412192110
+ run_mode: real-time #one-time or real_time
+ start_time: file #Timestamp or integer indicating minutes, or 'duration' string (12h, 14d), or file
+ #end_time: 201412192110
+ initial_go_back: 24 #hours
+ sleep_time_in_seconds: 1800 #play with "run once a hour" use-case
+ query_length_in_seconds: 600 #seconds (10-minute max currently).
+ storage: files #options: files, standard_out, database (not implemented yet) --> Store activities in local files, in database. or print to system out?
+ out_box: ./data
+ compressed_files: true #Data files are delivered in gzipped format, set this to false to uncompress them.
 
-  sleep_time_in_seconds: 30 #play with "run once a hour" use-case
-  query_length_in_seconds: 600 #10-minute max currently.
-
-  storage: files #options: files, database, standard_out --> Store activities in local files, in database. or print to system out?
-  out_box: ./data
-  compressed_files: true
-
-  log_file_path: ./logs/compliance_api.log
+logging:
+  log_file_path: ./compliance_api.log
+  size: 10 #MB
+  keep: 2
 
 database:
   host: 127.0.0.1
@@ -30,7 +32,7 @@ database:
   #Note: currently all PowerTrack example clients share a common database schema.
   schema: <DATABASE_NAME>
   target_data_table: compliance_events
-  user_name: 
+  user_name:
   password_encoded:
   #password: test
   type: mysql
