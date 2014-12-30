@@ -13,7 +13,8 @@ Helps automate real-time requests to the Compliance API.
 
 This example project consists of several resources:
 * compliance_api.rb: the 'main' client program that is excuted with various options (see below).
-* pt_restful.rb: a common-code HTTP helper class currently based on the Ruby net/https gem.
+* pt_restful.rb: a common-code HTTP helper class currently based on the stsndard Ruby net/https gem.
+* pt_logging: a common-code Logger class currently based on the Ruby 'logging' gem.
 * example_config.yaml: Compliance Client configuration file.
  
 ### Client run-time options
