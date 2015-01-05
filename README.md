@@ -5,15 +5,22 @@
 To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the API can be found at the [Gnip support site](http://support.gnip.com/apis/compliance_api/).
 
 ### So, what does this Compliance API client do?
-Helps automate real-time requests to the Compliance API.
 
+This app helps automate real-time requests to the Compliance API. It supports several operational modes:
 
-
-
+* One-time 'backfill' mode:
+   * When a start-time __and__ end-time are provided, the client will manage all Compliance API requests to cover that period.    * When those requests are finished, the app exits. 
+   * Start-time and end-time parameters can be provided with a configuration file or via the command-line.
+* 'Realtime' mode: 
+   * If no end-tme is provided, the client will start in a 'realtime' mode. 
+   * In this mode, the app continues to run, making Compliance API requests every ten minutes. 
+   * Start-time parameter can be provided with a configuration file or via the command-line. 
+ 
+This Compliance API client writes a 'last time' file in its local directory after every successful Compliance API request. If no 'start-time' is provided when the client starts, it will be set to the timestamp found in the 'last time' file. If the client starts with no start-time parameters, and the 'last time' file is not found, the client will set the 'start-time' to the current time, wait ten minutes, and begin making Compliance API requests.
 
 This example project consists of several resources:
 * compliance_api.rb: the 'main' client program that is excuted with various options (see below).
-* pt_restful.rb: a common-code HTTP helper class currently based on the stsndard Ruby net/https gem.
+* pt_restful.rb: a common-code HTTP helper class currently based on the standard Ruby net/https gem.
 * pt_logging: a common-code Logger class currently based on the Ruby 'logging' gem.
 * example_config.yaml: Compliance Client configuration file.
  
