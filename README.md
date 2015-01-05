@@ -115,22 +115,3 @@ Configuration and rule details can be specified by passing in files or specifyin
 
 
 
-
-
-
-
-
-
-
-While the linked documentation provides a complete description of a single query, this package:
-* Automates the query generation.
-* Automates the periodic submission of queries.
-* Manages common connection errors.
-* Standardizes the data output.
-
-
-
-
-
-
-
