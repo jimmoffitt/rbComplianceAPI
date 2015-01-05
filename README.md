@@ -4,6 +4,11 @@
 
 To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the API can be found at the [Gnip support site](http://support.gnip.com/apis/compliance_api/).
 
+As discussed in the Compliance API documentation, ...
+
+The recommended practice is to query the API for 10-minute time intervals, with a delay of at least 5 minutes between the end of the time interval and the current time. Missed data can be obtained with a series of custom queries of no more than 10 minutes in length. 
+
+
 ### So, what does this Compliance API client do?
 
 This app helps automate real-time requests to the Compliance API. It supports several operational modes:
@@ -95,7 +100,7 @@ Usage: compliance_api [options]
     * ISO 8061/Twitter timestamps (2013-11-15T17:16:42.000Z), as "YYYY-MM-DD HH:MM".
     * With simple notation indicating the number of minutes (30m), hours (12h) and days (14d).
 
-###Important notes
+####Important notes
 * Specifying both a start-time __and__ end-time will run the client in a __one-time__ 'backfill' mode. The client will manage all Compliance API requests to cover that period, then exit. 
 * Specifying only a start-time will run the client app in a 'realtime' mode. The app continues to run, making Compliance API requests every ten minutes. 
 * If no start-time is provided, the app will use a 'last time' file mechanism to determine its start-time. If no 'last time' file is found, the app will wait ten minutes and then begin making Compliance API requests every ten minutes.
@@ -123,7 +128,7 @@ While the linked documentation provides a complete description of a single query
 * Manages common connection errors.
 * Standardizes the data output.
 
-The recommended practice is to query the API for 10-minute time intervals, with a delay of at least 5 minutes between the end of the time interval and the current time. Missed data can be obtained with a series of custom queries of no more than 10 minutes in length. 
+
 
 
 
