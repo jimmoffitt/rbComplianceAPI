@@ -10,26 +10,64 @@ This app helps automate real-time requests to the Compliance API. It supports se
 
 * One-time 'backfill' mode:
    * When a start-time __and__ end-time are provided, the client will manage all Compliance API requests to cover that period.    * When those requests are finished, the app exits. 
-   * Start-time and end-time parameters can be provided with a configuration file or via the command-line.
+   * Start-time __and__ end-time parameters can be provided with a configuration file or via the command-line.
 * 'Realtime' mode: 
    * If no end-tme is provided, the client will start in a 'realtime' mode. 
    * In this mode, the app continues to run, making Compliance API requests every ten minutes. 
    * Start-time parameter can be provided with a configuration file or via the command-line. 
  
+Note that if only an end-time is specified, and error will occur.
+
 This Compliance API client writes a 'last time' file in its local directory after every successful Compliance API request. If no 'start-time' is provided when the client starts, it will be set to the timestamp found in the 'last time' file. If the client starts with no start-time parameters, and the 'last time' file is not found, the client will set the 'start-time' to the current time, wait ten minutes, and begin making Compliance API requests.
 
-This example project consists of several resources:
+Currently, Compliance API output can be written to a 'outbox' directory. This directory can be specified in the client configuration file or via the command-line.
+
+###Getting started
+
+Have access to Compliance API. This can be tested with a simple cURL command:
+
+Have the following files in a directory of your choice:
+
 * compliance_api.rb: the 'main' client program that is excuted with various options (see below).
 * pt_restful.rb: a common-code HTTP helper class currently based on the standard Ruby net/https gem.
 * pt_logging: a common-code Logger class currently based on the Ruby 'logging' gem.
 * example_config.yaml: Compliance Client configuration file.
  
-### Client run-time options
+
+###Client Configuration
 
 
 
-* Search start and end time can be specified in several ways: standard PowerTrack timestamps (YYYYMMDDHHMM), 
-  ISO 8061/Twitter timestamps (2013-11-15T17:16:42.000Z), as "YYYY-MM-DD HH:MM", and also with simple notation indicating the number of minutes (30m), hours (12h) and days (14d).
+###Command-line options
+
+Three optional command-line parameters can be provided:
+
+```
+Usage: compliance_api [options]
+    -c, --config CONFIG              Configuration file (including path) that provides account and download settings.
+                                         Config files include username, password, account name and stream label/name.
+    -s, --start_time START           UTC timestamp for beginning of Search period.
+                                           Specified as YYYYMMDDHHMM, "YYYY-MM-DD HH:MM", YYYY-MM-DDTHH:MM:SS.000Z or use ##d, ##h or ##m. If set to 'file', a local 'start_time.dat' file is used to track Compliance API calls.
+    -e, --end_time END               UTC timestamp for ending of Search period.
+                                        Specified as YYYYMMDDHHMM, "YYYY-MM-DD HH:MM", YYYY-MM-DDTHH:MM:SS.000Z or use ##d, ##h or ##m.
+    -o, --outbox OUTBOX              Optional. Triggers the generation of files and where to write them.
+    -h, --help                       Display this screen.
+
+```
+
+##Specifying Start and End Times
+
+###Important notes
+Setting an end-time will run the client in a one-time 'backfill' mode. The client will manage all Compliance API requests to cover that period, then exit. 
+
+Setting
+
+* Search start and end time can be specified in several ways: 
+    * standard PowerTrack timestamps (YYYYMMDDHHMM).
+    * ISO 8061/Twitter timestamps (2013-11-15T17:16:42.000Z), as "YYYY-MM-DD HH:MM".
+    * With simple notation indicating the number of minutes (30m), hours (12h) and days (14d).
+
+##Example Usage
 
 Configuration and rule details can be specified by passing in files or specifying on the command-line, or a combination of both.  Here are some quick example:
   * Using configuration and rules files, requesting 30 days: $ruby search_api.rb -c "./myConfig.yaml" -r "./myRules.json"
@@ -48,22 +86,9 @@ This Compliance API client was designed anticipating several use-cases:
 
 
 
-**Command-line options**
 
-Three optional command-line parameters can be provided:
 
-```
-Usage: compliance_api [options]
-    -c, --config CONFIG              Configuration file (including path) that provides account and download settings.
-                                         Config files include username, password, account name and stream label/name.
-    -s, --start_time START           UTC timestamp for beginning of Search period.
-                                           Specified as YYYYMMDDHHMM, "YYYY-MM-DD HH:MM", YYYY-MM-DDTHH:MM:SS.000Z or use ##d, ##h or ##m. If set to 'file', a local 'start_time.dat' file is used to track Compliance API calls.
-    -e, --end_time END               UTC timestamp for ending of Search period.
-                                        Specified as YYYYMMDDHHMM, "YYYY-MM-DD HH:MM", YYYY-MM-DDTHH:MM:SS.000Z or use ##d, ##h or ##m.
-    -o, --outbox OUTBOX              Optional. Triggers the generation of files and where to write them.
-    -h, --help                       Display this screen.
 
-```
 
 
 
