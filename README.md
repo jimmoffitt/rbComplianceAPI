@@ -11,7 +11,8 @@ This app helps automate real-time requests to the Compliance API. This client wi
 It supports several operational modes:
 
 * One-time 'backfill' mode:
-   * When a start-time __and__ end-time are provided, the client will manage all Compliance API requests to cover that period.    * The app will run in an __one-time__ fashion. When those requests are finished, the app exits. 
+   * When a start-time __and__ end-time are provided, the client will manage all Compliance API requests to cover that period.
+   * The app will run in an __one-time__ fashion. When those requests are finished, the app exits. 
    * Start-time __and__ end-time parameters can be provided with a configuration file or via the command-line.
    
 * 'Realtime' mode: 
@@ -30,7 +31,9 @@ Currently, Compliance API output can be written to a 'outbox' directory. This di
 Have access to Compliance API. This can be tested with a simple cURL command:
 
 ```
-   curl -u<USER_NAME> http://
+   curl -v --compressed -u<USER_NAME> \
+    "https://compliance.gnip.com:443/accounts/<ACCOUNT_NAME>/publishers/twitter \
+    ?fromDate=<YYYYMMDDHHMM>&toDate=<YYYYMMDDHHMM>"
 ```
 
 Have the following files in a directory of your choice:
