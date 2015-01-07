@@ -4,18 +4,16 @@
 
 To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the API can be found at the [Gnip support site](http://support.gnip.com/apis/compliance_api/).
 
-As discussed in the Compliance API documentation, ...
-
-The recommended practice is to query the API for 10-minute time intervals, with a delay of at least 5 minutes between the end of the time interval and the current time. Missed data can be obtained with a series of custom queries of no more than 10 minutes in length. 
-
-
 ### So, what does this Compliance API client do?
 
-This app helps automate real-time requests to the Compliance API. It supports several operational modes:
+This app helps automate real-time requests to the Compliance API. This client will implement the recommended practice of querying the API every ten minutes, with a delay of at least 5 minutes between the end of the time interval and the current time. 
+
+It supports several operational modes:
 
 * One-time 'backfill' mode:
    * When a start-time __and__ end-time are provided, the client will manage all Compliance API requests to cover that period.    * The app will run in an __one-time__ fashion. When those requests are finished, the app exits. 
    * Start-time __and__ end-time parameters can be provided with a configuration file or via the command-line.
+   
 * 'Realtime' mode: 
    * If no end-tme is provided, the client will start in a 'realtime' mode. 
    * In this mode, the app continues to run, making Compliance API requests every ten minutes. 
