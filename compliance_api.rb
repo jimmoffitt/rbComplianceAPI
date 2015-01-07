@@ -2,20 +2,22 @@
 __author__ = "Jim Moffitt"
 
 #TODOs:
-#     [] Have mechanism to persist endpoint, for subsequent run....? last_run.dat file? Rewrite yaml file?
+#     [X] Have mechanism to persist endpoint, for subsequent run....? last_run.dat file? Rewrite yaml file?
 #     [X] Logging?
 #     [] Filling all oComp attributes?
 #     [] encrypted password
 #     [X] Start compliance calls
 #     [X] Handle output
+#     [X] Ignore empty result responses
 
 require 'optparse'
 require 'base64'
 require 'time'
 require 'json'
-require_relative './pt_restful'
-
 require 'logging'
+
+require_relative './pt_restful'
+require_relative './pt_logging'
 
 class ComplianceAPIClient
 
@@ -28,15 +30,15 @@ class ComplianceAPIClient
                 :product, :stream_type, :label, #These are currently not in Compliance URI.
 
                 :run_mode,
-                :start_time, :end_time,
+                :start_time, :end_time, #Of entire
+                :request_start, :request_end, #Of single Compliance API request.
 
                 :use_start_file, :start_time_file,
-                :initial_go_back, #in hours. If start_time set to 'file', and file doesn't exist, go back this far on initial run.
-                :sleep_time, #in seconds.
                 :query_length, #in seconds.
 
                 :storage,
                 :out_box,
+                :ignore_no_results_response,
                 :compress_files,
 
                 :logger,
@@ -44,7 +46,8 @@ class ComplianceAPIClient
 
 
   #Can only ask for Compliance data from 5-minutes ago.
-  COMPLIANCE_MIN_LATENCY = 300 #SECONDS.
+  COMPLIANCE_MIN_LATENCY = 300 #Seconds.
+  SLEEP_TIME = 30 #Seconds.
 
   def initialize
 
@@ -55,11 +58,7 @@ class ComplianceAPIClient
 
     #Defaults.
     @publisher = "twitter"
-    @run_mode = "one_time"
     @start_time_file = './start_time.dat'
-    @initial_go_back = 24
-    @sleep_time = 10
-    @time_offset = 600
     @query_length = 600
 
     @storage = "files" #No other option implemented yet.
@@ -81,58 +80,101 @@ class ComplianceAPIClient
     @logger = logger
   end
 
-  def write_start_time
+  def write_start_time(request_end)
     #Take the current end_time and write it out to start_time_file.
+    logger.debug("Writing start_time.dat file with: #{request_end.strftime('%F %H:%M')}")
     f = File.open(@start_time_file, 'w')
-    f.write(@end_time.strftime('%F %H:%M'))
+    f.write(request_end.strftime('%F %H:%M'))
     f.close
   end
 
+  #Manages calls to the Compliance API, using start and end times...
+  #Timestamps arrive here in the YYYYMMDDHHMM format, get cast to Time objects for doing math,
+  #then cast back to YYYYMMDDHHMM for request method. 
+    
   def run
     @logger.debug "Running..."
+    success = false
+    
+    #Convert time strings to Time objects, for math fun.
+    if !@start_time.nil? then 
+      @start_time =  Time.parse("#{@start_time}Z")
+    end
 
-    if @run_mode == "real-time" then
+    if !@end_time.nil? then
+      @end_time =  Time.parse("#{@end_time}Z")
+    end
+    
 
-      #No times provided? Then set defaults.
-      if @start_time.nil? and @end_time.nil? then
-        @start_time.utc = Time.now.utc - @query_length - COMPLIANCE_MIN_LATENCY
-        @end_time.utc = @start_time + @query_length
-      elsif @end_time.nil?
-        @start_time = Time.parse("#{@start_time}Z")
-        @end_time = @start_time + @query_length
-      else
-        @start_time = Time.parse("#{@start_time}Z")
-        @end_time = Time.parse("#{@start_time}Z")
+    #If providing both a start and end time, then this is a 'one-time' 'backfill' run. Assuming period spans more
+    #than one request limit, multiple calls are made, then the app exits.
+    if !@start_time.nil? and !@end_time.nil? then
+
+      #Check end_time, and correct if neccessary TODO: doc
+      @end_time = Time.now - COMPLIANCE_MIN_LATENCY if @end_time > Time.now - COMPLIANCE_MIN_LATENCY
+
+      #Set up initial request.
+      @request_start =  @start_time
+      @request_end = @start_time + @query_length
+      
+      #Check end_time, and correct if neccessary TODO: doc
+      @request_end = Time.now - COMPLIANCE_MIN_LATENCY if @request_end > Time.now - COMPLIANCE_MIN_LATENCY
+
+      #Manage requests for this backfill period.
+      while true
+        success = make_request(@request_start, @request_end)
+        
+        if success then 
+          @request_start = @request_end
+          @request_end = @request_start + @query_length
+          if @request_end > @end_time then
+            @request_end = @end_time
+          end
+        
+          if @request_start >= @end_time then
+            break
+          end
+
+          @request_end = Time.now - COMPLIANCE_MIN_LATENCY if @request_end > Time.now - COMPLIANCE_MIN_LATENCY
+        end  
       end
+    else #Realtime mode.
+
+      @request_start = @start_time
+      @request_end = @start_time + @query_length
 
       #Hold-off if needed before initial run.
-      while Time.now.utc < (@end_time + @query_length + COMPLIANCE_MIN_LATENCY)
-        sleep 30
+      while Time.now.utc < (@request_end + COMPLIANCE_MIN_LATENCY)
+        logger.debug("Too early to run, sleeping #{SLEEP_TIME} seconds...")
+        puts "Holding off #{SLEEP_TIME} seconds..."
+        sleep SLEEP_TIME
       end
 
       while true
-        make_request(@start_time, @end_time) if Time.now.utc < (@end_time + @query_length + COMPLIANCE_MIN_LATENCY)
+        success = make_request(@request_start, @request_end)
 
-        while Time.now.utc < (@end_time + @query_length + COMPLIANCE_MIN_LATENCY)
-          sleep @sleep_time
+        if success then
+          @request_start = @request_end
+          @request_end = @request_start + @query_length
         end
 
-        @start_time = @end_time
-        @end_time = @start_time + @query_length
-
+        while Time.now.utc < (@request_end + COMPLIANCE_MIN_LATENCY)
+          logger.debug("Holding off #{SLEEP_TIME} seconds...")
+          puts "Holding off #{SLEEP_TIME} seconds..."
+          sleep SLEEP_TIME
+        end
+        
       end
-    else
-      make_request(@start_time, @end_time)
     end
   end
 
-  def make_request(start_time, stop_time)
+  def make_request(request_start, request_end)
 
     @urlCompliance = @http.getComplianceURL(@account_name)
 
     parameters = {}
-    parameters['fromDate'] =  get_date_string(@start_time)
-    parameters['toDate'] =  get_date_string(@end_time)
+    parameters['fromDate'] =  get_date_string(request_start)
+    parameters['toDate'] =  get_date_string(request_end)
     parameters['product'] = @product unless @product.nil?
     parameters['stream_type'] = @stream_type unless @stream_type.nil?
     parameters['label'] = @label unless @label.nil?
@@ -149,22 +191,33 @@ class ComplianceAPIClient
 
     if response.code != "200" then
       logger.error("Error #{response.code} response code from Compliance API.")
+      return false
     else
       if @use_start_file then
-        write_start_time
+        write_start_time request_end
       end
-    end
 
-    write_data data, @start_time, @end_time
+      write_data data, request_start, request_end
+    end
+    
+    return true
 
   end
 
   def write_data(response, start_time, end_time)
+    
+    #TODO - add logic/option to not save results if they do not include Compliance events.
+    
+    if @ignore_no_results_response then #confirm that there are some results...
+      if JSON.parse(response)['summary']['totalResults'] == 0 then 
+        return
+      end
+    end    
 
     #Cast timestamps into Time objects.
     begin
-      st = Time.parse("#{start_time}Z").utc
-      et = Time.parse("#{end_time}Z").utc
+      st = Time.parse("#{start_time}").utc
+      et = Time.parse("#{end_time}").utc
     rescue => e
       logger.error("Error creating Time objects: #{e.message} | #{e.to_s}")
     end
@@ -179,7 +232,7 @@ class ComplianceAPIClient
 
     #Create output file.
     begin
-      file_name = "compliance-#{st.year}-#{'%02d' % st.month}-#{'%02d' % st.day}-#{'%02d' % st.hour}.json"
+      file_name = "compliance-#{st.year}-#{'%02d' % st.month}-#{'%02d' % st.day}-#{'%02d' % st.hour}-#{'%02d' % st.min}.json"
       f = File.open("#{file_path}/#{file_name}",'w+')
 
       logger.debug("Writing output file #{file_name}")
@@ -232,27 +285,29 @@ class ComplianceAPIClient
     end
 
     #App settings.
-    @run_mode = config['app']['run_mode']
     @start_time = config['app']['start_time']
-    @initial_go_back = config['app']['initial_go_back']
     @end_time = config['app']['end_time']
-    @sleep_time = config['app']['sleep_time_in_seconds']
-    @time_offset = config['app']['time_offset_in_seconds']
+    
     @query_length = config['app']['query_length_in_seconds']
     @storage = config['app']['storage']
 
     begin
-      @out_box = checkDirectory(config["compliance"]["out_box"])
+      @out_box = checkDirectory(config["app"]["out_box"])
     rescue
       @out_box = "./data"
     end
 
     begin
-      @compress_files = config["compliance"]["compress_files"]
+      @ignore_no_results_response = config["app"]["ignore_no_results_response"]
+    rescue
+      @ignore_no_results_response = false
+    end
+
+    begin
+      @compress_files = config["app"]["compress_files"]
     rescue
       @compress_files = false
     end
-
 
     @log_file_path = config['app']['log_file_path']
 
@@ -276,6 +331,16 @@ class ComplianceAPIClient
     if @user_name.nil? then
         p 'Error: no user_name.'
         return false
+    end
+
+    if @password.nil? and @password_encoded.nil? then
+      p 'Error: no password.'
+      return false
+    end
+
+    if !@end_time.nil? and @start_time.nil? then
+      p 'Error: only end_time provided. When setting end time, a start time must also be provided.'
+      return false
     end
 
     return config_ok
@@ -331,6 +396,15 @@ class ComplianceAPIClient
 
   end
 
+  def get_logger(config_file=nil)
+
+    logging = PTLogging.new
+    logging.get_config(config_file)
+    @logger = logging.get_logger
+    logging.name = 'compliance_api'
+
+  end
+
 end
 
 #-------------------------------------------------------------------------------------------------------------------
@@ -358,22 +432,10 @@ end
 #=======================================================================================================================
 if __FILE__ == $0  #This script code is executed when running this file.
 
-
-
-  logger = Logging.logger(STDOUT)
-  logger.level = :info
-  logger.info("Program started")
-
-  #Create Compliance API object.
-  logger.debug("Creating Compliance API object.")
   oComp = ComplianceAPIClient.new()
   oComp.start_time_file = './start_time.dat'
 
-  #logger = Logger.new File.new(oComp.log_file_path)
-  oComp.logger = logger
-
-  logger.debug("Passing #{ARGV.length/2} arguments on command-line")
-
+  #Handle any passed-in command-line parameters.
   if ARGV.length > 0 then
 
     OptionParser.new do |o| #Process any parameters passed-in via command-line.
@@ -394,7 +456,7 @@ if __FILE__ == $0  #This script code is executed when running this file.
 
       #Period of search.  Defaults to end = Now(), start = Now() - 30.days.
       o.on('-s START', '--start_time', "UTC timestamp for beginning of Search period.
-                                           Specified as YYYYMMDDHHMM, \"YYYY-MM-DD HH:MM\", YYYY-MM-DDTHH:MM:SS.000Z or use ##d, ##h or ##m.") { |start_time| $start_time = start_time}
+                                           Specified as YYYYMMDDHHMM, \"YYYY-MM-DD HH:MM\", YYYY-MM-DDTHH:MM:SS.000Z or use ##d, ##h or ##m. If set to 'file', a local 'start_time_saved.dat' file is used to track Compliance API calls.") { |start_time| $start_time = start_time}
       o.on('-e END', '--end_time', "UTC timestamp for ending of Search period.
                                         Specified as YYYYMMDDHHMM, \"YYYY-MM-DD HH:MM\", YYYY-MM-DDTHH:MM:SS.000Z or use ##d, ##h or ##m.") { |end_time| $end_time = end_time}
 
@@ -412,11 +474,16 @@ if __FILE__ == $0  #This script code is executed when running this file.
   end
 
   #Load configuration file.
-  config_file_path = "./config.yaml" #Default location and name.
+  config_file = "./config.yaml" #Default location and name.
   if !$config.nil? then
-    config_file_path = $config #Or overwritten from command-line.
+    config_file = $config #Or overwritten from command-line.
   end
-  oComp.get_app_config(config_file_path)
+
+  #Set up Logger.
+  oComp.get_logger(config_file)
+  oComp.logger.info "Compliance API client started."
+
+  oComp.get_app_config(config_file)
 
   #We need to end up with PowerTrack timestamps in YYYYMMDDHHmm format.
   #If numeric and length = 12 then we are all set.
@@ -429,16 +496,16 @@ if __FILE__ == $0  #This script code is executed when running this file.
   #First see if it was passed in
   if !$start_time.nil? then
 
-    if $start_time == 'file' then
-      oComp.use_start_file = true
-      if !File.exist?(oComp.start_time_file)
-        oComp.start_time = oComp.set_date_string("#{oComp.initial_go_back}h")
-      else
-        read_start_time = true
-      end
-    else
+  #  if $start_time == 'file' then
+  #    oComp.use_start_file = true
+  #    if !File.exist?(oComp.start_time_file)
+  #     oComp.start_time = oComp.set_date_string("#{oComp.initial_go_back}h")
+  #    else
+  #      read_start_time = true
+  #    end
+  #  else
       oComp.start_time = oComp.set_date_string($start_time)
-    end
+  #  end
   end
 
   #Handle end date.
@@ -447,19 +514,14 @@ if __FILE__ == $0  #This script code is executed when running this file.
     oComp.end_time = oComp.set_date_string($end_time)
   end
 
-
-  if oComp.start_time == 'file' then
+  if oComp.start_time.nil? then
     oComp.use_start_file = true
     if !File.exist?(oComp.start_time_file)
-      oComp.start_time = oComp.set_date_string("#{oComp.initial_go_back}h")
+      oComp.start_time = oComp.set_date_string(Time.now.utc.to_s)
     else
-      read_start_time = true
+      start_time_dat = File.read(oComp.start_time_file)
+      oComp.start_time = oComp.set_date_string(start_time_dat)
     end
-  end
-
-  if read_start_time then
-    start_time_dat = File.read(oComp.start_time_file)
-    oComp.start_time = oComp.set_date_string(start_time_dat)
   end
 
   if oComp.check_config then
@@ -469,7 +531,6 @@ if __FILE__ == $0  #This script code is executed when running this file.
     logger.error 'Problem with configuration. Not running...'
   end
 end
-
 
 
 =begin
