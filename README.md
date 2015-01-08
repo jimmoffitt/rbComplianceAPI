@@ -61,13 +61,12 @@ Here are some additional configuration details:
 
   * Logging. This Compliance API client includes basic logging support (using the [logging](https://github.com/TwP/logging) Ruby gem), with the following options.
 
-    * __log_file_path__: ./compliance_api.log
-    * __size__: 10 #MB
-    * __keep__: 2
+    * __log_file_path__: The path and file name to contain client log entries. Default to ```./compliance_api.log```.
+    * __warn_level__: Logging level: debug, info, warn, critical.
+    * __size__: The maximum size of the log file, in megabytes (MB). Default is 10 MB.
+    * __keep__: The number of rolling log files to maintain. Default is 2.
 
-
-
-Here is an example 
+See [HERE] for an example Compliance API client configuration file.
 
 ```
 account:
