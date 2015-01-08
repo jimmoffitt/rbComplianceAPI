@@ -66,7 +66,7 @@ Here are some additional configuration details:
     * __size__: The maximum size of the log file, in megabytes (MB). Default is 10 MB.
     * __keep__: The number of rolling log files to maintain. Default is 2.
 
-See [HERE] for an example Compliance API client configuration file.
+See [HERE](rbComplianceAPI/example_config.yaml) for an example Compliance API client configuration file.
 
 ```
 account:
