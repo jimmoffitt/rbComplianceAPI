@@ -55,15 +55,15 @@ Here are some additional configuration details:
   * Account information:
   * Product details:
   * Application options:
-      * query_length_in_seconds: Duration of the Compliance API request, in seconds. The maximum period per request is 10 minutes. Defaults to 600.
-      * out_box: Directory where Compliance datafiles are written. Defaults to ```./data```. Specified directory is created if neccessary.
- ignore_no_results_response: When set to ```true``` no file is written if there are no Compliance events in API response. When set to false, a file is created even if no events occured during the requested period. Defaults to ```true```.
+      * __query_length_in_seconds__: Duration of the Compliance API request, in seconds. The maximum period per request is 10 minutes. Defaults to 600.
+      * __out_box__: Directory where Compliance datafiles are written. Defaults to ```./data```. Specified directory is created if neccessary.
+      * __ignore_no_results_response__: When set to ```true``` no file is written if there are no Compliance events in API response. When set to false, a file is created even if no events occured during the requested period. Defaults to ```true```.
 
-This Compliance API client includes basic logging support (using the [logging](https://github.com/TwP/logging) Ruby gem), with the following options.
+  * Logging. This Compliance API client includes basic logging support (using the [logging](https://github.com/TwP/logging) Ruby gem), with the following options.
 
-  * log_file_path: ./compliance_api.log
-  * size: 10 #MB
-  * keep: 2
+    * __log_file_path__: ./compliance_api.log
+    * __size__: 10 #MB
+    * __keep__: 2
 
 
 
