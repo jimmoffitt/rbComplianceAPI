@@ -17,10 +17,11 @@ It supports several operational modes:
    
 * 'Realtime' mode: 
    * If no end-tme is provided, the client will start in a 'realtime' mode. 
-   * In this mode, the app continues to run, making Compliance API requests every ten minutes. 
+   * In this mode, the client will make as many 10-minute Compliance API requests it takes to catch up to most recent available ten-minute period (ending at least five minutes ago).
+   * Once the Compliance data is caught up, the app continues to run, making Compliance API requests every ten minutes. 
    * Start-time parameter can be provided with a configuration file or via the command-line. 
  
-Note that if only an end-time is specified, and error will occur.
+    _Note that if only an end-time is specified, and error will occur._
 
 This Compliance API client writes a 'last time' file in its local directory after every successful Compliance API request. If no 'start-time' is provided when the client starts, it will be set to the timestamp found in the 'last time' file. If the client starts with no start-time parameters, and the 'last time' file is not found, the client will set the 'start-time' to the current time, wait ten minutes, and begin making Compliance API requests.  A 'last time' file is a simple (UTF-8) text file that contains a ```YYYY-MM-DD HH:MM``` timestamp. 
 
@@ -42,11 +43,31 @@ Have the following files in a directory of your choice:
 * pt_restful.rb: a common-code HTTP helper class currently based on the standard Ruby net/https gem.
 * pt_logging: a common-code Logger class currently based on the Ruby 'logging' gem.
 * example_config.yaml: Compliance Client configuration file.
- 
 
 ###Client Configuration
 
+As discussed above, start and end time parameters determine the execution behavior of the client application. More information on their use, and the variety of formats supported for specifying timestamps, is included in the next section.
 
+
+
+Here are some additional configuration details:
+
+  * Account information:
+  * Product details:
+  * Application options:
+      * query_length_in_seconds: Duration of the Compliance API request, in seconds. The maximum period per request is 10 minutes. Defaults to 600.
+      * out_box: Directory where Compliance datafiles are written. Defaults to ```./data```. Specified directory is created if neccessary.
+ ignore_no_results_response: When set to ```true``` no file is written if there are no Compliance events in API response. When set to false, a file is created even if no events occured during the requested period. Defaults to ```true```.
+
+This Compliance API client includes basic logging support (using the [logging](https://github.com/TwP/logging) Ruby gem), with the following options.
+
+  * log_file_path: ./compliance_api.log
+  * size: 10 #MB
+  * keep: 2
+
+
+
+Here is an example 
 
 ```
 account:
