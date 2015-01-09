@@ -2,11 +2,11 @@
 
 ### Gnip Compliance API
 
-To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the [Compliance API]((http://support.gnip.com/apis/compliance_api/)) can be found at the [Gnip support site](http://support.gnip.com).
+To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the [Compliance API](http://support.gnip.com/apis/compliance_api/) can be found at the [Gnip support site](http://support.gnip.com).
 
 ### So, what does this Compliance API client do?
 
-This app helps automate real-time requests to the Compliance API. This client will implement the recommended practice of querying the API every ten minutes, with a delay of at least 5 minutes between the end of the time interval and the current time. 
+This Ruby app helps automate real-time requests to the Compliance API. This client will implement the recommended practice of querying the API every ten minutes, with a delay of at least 5 minutes between the end of the time interval and the current time. 
 
 It supports several operational modes:
 
