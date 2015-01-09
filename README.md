@@ -115,8 +115,16 @@ This Compliance API client writes a 'last time' file in its local directory afte
 
 Configuration and rule details can be specified by passing in files or specifying on the command-line, or a combination of both.  Here are some quick example:
 
+* Start Compliance API client and continue running until terminated: 
+  *  ```$ruby compliance_api.rb ```  Note: application will wait 15-minutes and begin making 10-minute requests every 10 minutes.
+
 * Begin real-time fetch of Compliance API data, starting 24 hours ago: 
-        ```$ruby compliance_api.rb -s 24h```  (Note ```-s 1d``` and ```-s 1440m``` are equivalent start time parameters.) 
+  * ```$ruby compliance_api.rb -s 24h```  (Note ```-s 1d``` and ```-s 1440m``` are equivalent start time parameters.) 
+
+* Backfill a 12-hour period:
+  * ```$ruby compliance_api.rb -s '2015-01-01 00:00' -e '2015-01-01 12:00' ```
+
+
 
 
 
