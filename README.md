@@ -23,7 +23,7 @@ It supports several operational modes:
    * Once the Compliance data is caught up, the app continues to run, making Compliance API requests every ten minutes. 
    * Start-time parameter can be provided with a configuration file or via the command-line. 
  
-    **_All timestamps should be in the __UTC__ timezone._**
+    **_All timestamps should be in the UTC timezone._**
 
     _Note that if only an end-time is specified, and error will occur._
 
