@@ -63,7 +63,7 @@ As discussed above, start and end time parameters determine the execution behavi
   * Logging. The client includes basic logging support (using the [logging](https://github.com/TwP/logging) Ruby gem), with the following options.
 
     * __log_file_path__: The path and file name to contain client log entries. Default to ```./compliance_api.log```.
-    * __warn_level__: Logging level: debug, info, warn, critical.
+    * __warn_level__: Logging level: :debug, :info, :warn, :error, :critical, :fatal. Defaults to ```info```.
     * __size__: The maximum size of the log file, in megabytes (MB). Default is 10 MB.
     * __keep__: The number of rolling log files to maintain. Default is 2.
 
@@ -106,7 +106,8 @@ This Compliance API client writes a 'last time' file in its local directory afte
 Configuration and rule details can be specified by passing in files or specifying on the command-line, or a combination of both.  Here are some quick example:
 
 * Start Compliance API client and continue running until terminated: 
-  *  ```$ruby compliance_api.rb ```  Note: application will wait 15-minutes and begin making 10-minute requests every 10 minutes.
+  *  ```$ruby compliance_api.rb ``` with no __start_time__ or __end_time__ set in configuration file.
+  *  Note: application will wait 15-minutes and begin making 10-minute requests every 10 minutes.
 
 * Begin real-time fetch of Compliance API data, starting 24 hours ago: 
   * ```$ruby compliance_api.rb -s 24h```  (Note ```-s 1d``` and ```-s 1440m``` are equivalent start time parameters.) 
