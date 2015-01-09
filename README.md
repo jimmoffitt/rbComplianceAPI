@@ -46,16 +46,12 @@ Have the following files in a directory of your choice:
 
 ###Client Configuration
 
-This client application uses a [YAML](http://www.yaml.org/) configuration file for setting and required account and optional product information. The configutation file can also be used to set other optional settings that affect client behavior, such as output and logging details.
+This client application uses a [YAML](http://www.yaml.org/) configuration file for setting required account and optional product information. The configutation file can also be used to set other optional settings that affect client behavior, such as output and logging details.
 
 By default the application looks in its local directory for a ```config.yaml file```. The configuration path and file name can also be passed in via the command-line:
    ```$ruby compliance_api.rb -c "/configs/api/compliance/config.yaml" ```
    
-   
 
-
-
-The application also supports
 
 As discussed above, start and end time parameters determine the execution behavior of the client application. These time parameters can More information on their use, and the variety of formats supported for specifying timestamps, is included in the next section.
 
@@ -81,7 +77,7 @@ See [HERE](https://github.com/jimmoffitt/rbComplianceAPI/blob/master/example_con
 
 ###Command-line options
 
-Three optional command-line parameters can be provided:
+The application also provides command-line support for these parameters:
 
 ```
 Usage: compliance_api [options]
