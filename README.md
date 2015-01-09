@@ -90,6 +90,7 @@ Usage: compliance_api [options]
 
 ##Specifying Start and End Times
 
+* __start_time__ and __end_time__ are specified in __UTC__. All timestamps included in the Compliance API responses are in __UTC__.
 * Search start-and end-time can be specified in several ways: 
     * standard PowerTrack timestamps (YYYYMMDDHHMM).
     * ISO 8061/Twitter timestamps (2013-11-15T17:16:42.000Z), as "YYYY-MM-DD HH:MM".
