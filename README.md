@@ -4,6 +4,8 @@
 
 To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the [Compliance API](http://support.gnip.com/apis/compliance_api/) can be found at the [Gnip support site](http://support.gnip.com).
 
+The purpose of this example code is to illustrate how the Compliance API works and provide a starting place for your custom development. With luck it provides the functionality you need 'off-the-shelf.' Most likely you'll decide to extend and customize its behavior.
+
 ### So, what does this Compliance API client do?
 
 This Ruby app helps automate real-time requests to the Compliance API. This client will implement the recommended practice of querying the API every ten minutes, with a delay of at least 5 minutes between the end of the time interval and the current time. 
@@ -23,7 +25,7 @@ It supports several operational modes:
  
     _Note that if only an end-time is specified, and error will occur._
 
-Currently, Compliance API output can be written to a 'outbox' directory. This directory can be specified in the client configuration file or via the command-line.
+Currently, Compliance API output can be written to a 'outbox' directory. This directory can be specified in the client configuration file or via the command-line. See below for details on output directories and naming convention.
 
 ###Getting started
 
@@ -100,6 +102,8 @@ Usage: compliance_api [options]
 * If only an end-time is provided, an error will be thrown.
 
 This Compliance API client writes a 'last time' file in its local directory after every successful Compliance API request. If no 'start-time' is provided when the client starts, it will be set to the timestamp found in the 'last time' file. If the client starts with no start-time parameters, and the 'last time' file is not found, the client will set the 'start-time' to the current time, wait ten minutes, and begin making Compliance API requests.  A 'last time' file is a simple (UTF-8) text file that contains a ```YYYY-MM-DD HH:MM``` timestamp. 
+
+##Output
 
 ##Example Usage
 
