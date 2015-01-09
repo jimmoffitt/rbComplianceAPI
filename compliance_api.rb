@@ -16,6 +16,7 @@ require 'time'
 require 'json'
 require 'logging'
 
+#Some helper classes. 
 require_relative './pt_restful'
 require_relative './pt_logging'
 
@@ -42,6 +43,7 @@ class ComplianceAPIClient
                 :compress_files,
 
                 :logger,
+                :warn_level,
                 :log_file_path
 
 
@@ -244,7 +246,6 @@ class ComplianceAPIClient
     end
   end
 
-
   #Load in the configuration file details, setting many object attributes.
   def get_app_config(config_file)
 
@@ -310,20 +311,23 @@ class ComplianceAPIClient
     end
 
     @log_file_path = config['app']['log_file_path']
+    
 
-    if @storage == "database" then #Get database connection details.
-      db_host = config["database"]["host"]
-      db_port = config["database"]["port"]
-      db_schema = config["database"]["schema"]
-      db_user_name = config["database"]["user_name"]
-      db_password = config["database"]["password"]
-
-      @datastore = PtDatabase.new(db_host, db_port, db_schema, db_user_name, db_password)
-      @datastore.connect
-    end
+# Future database support?
+#     if @storage == "database" then #Get database connection details.
+#       db_host = config["database"]["host"]
+#       db_port = config["database"]["port"]
+#       db_schema = config["database"]["schema"]
+#       db_user_name = config["database"]["user_name"]
+#       db_password = config["database"]["password"]
+#
+#       @datastore = PtDatabase.new(db_host, db_port, db_schema, db_user_name, db_password)
+#       @datastore.connect
+#     end
+#
   end
 
-  #TODO: implement.
+  #TODO: implement. 
   def check_config
 
     config_ok = true
@@ -346,6 +350,11 @@ class ComplianceAPIClient
     return config_ok
   end
 
+  #Helper function to return encrypted password.
+  def encrypt_password(password)
+    puts password 
+  end
+  
   def get_date_string(time)
     return time.year.to_s + sprintf('%02i', time.month) + sprintf('%02i', time.day) + sprintf('%02i', time.hour) + sprintf('%02i', time.min)
   end
@@ -450,10 +459,12 @@ if __FILE__ == $0  #This script code is executed when running this file.
       #o.on('-p PASSWORD','--password', 'Password for Basic Authentication.  Same credentials used for console.gnip.com.') {|password| $password = password}
 
       #Search URL, based on account name.
-      #o.on('-a ADDRESS', '--address', 'Either Search API URL, or the account name which is used to derive URL.') {|address| $address = address}
+      #o.on('-a ADDRESS', '--address', 'Either Compliance API URL, or the account name which is used to derive URL.') {|address| $address = address}
       #o.on('-n NAME', '--name', 'Label/name used for Stream API. Required if account name is supplied on command-line,
       #                               which together are used to derive URL.') {|name| $name = name}
 
+      #TODO: pass in product/stream details?
+      
       #Period of search.  Defaults to end = Now(), start = Now() - 30.days.
       o.on('-s START', '--start_time', "UTC timestamp for beginning of Search period.
                                            Specified as YYYYMMDDHHMM, \"YYYY-MM-DD HH:MM\", YYYY-MM-DDTHH:MM:SS.000Z or use ##d, ##h or ##m. If set to 'file', a local 'start_time_saved.dat' file is used to track Compliance API calls.") { |start_time| $start_time = start_time}
@@ -532,23 +543,3 @@ if __FILE__ == $0  #This script code is executed when running this file.
   end
 end
 
-
-=begin
-
- Random notes around HTTP gems...
-
-
- # Sample code for using rest-client HTTP gem:
- #data = {query: 'gnip', publisher: 'twitter', maxResults: 100}
-    #auth = 'Basic ' + Base64.encode64( "#{user_name}:#{password}" ).chomp
-    #url = "https://search.gnip.com:443/accounts/#{account_name}/search/#{stream_label}/counts.json"
-    #headers = {:Authorization => auth, :content_type => :'application/json', :accept => :json }
-    #response = RestClient.get(url, {headers, :params => {:query => rule}})
-
-    #response = RestClient::Request.new(method: :post, url: url, user: user_name, payload: data,
-    #                                   password: password, timeout: 30, open_timeout: 30,
-    #                                   headers: headers).execute
-    #response = RestClient::Request.new(method: :post, url: url, payload: Yajl::Encoder.encode(data),
-    #                                   timeout: 30, open_timeout: 30,
-    #                                   headers: headers).execute
-=end
