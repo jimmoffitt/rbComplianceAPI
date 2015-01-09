@@ -10,7 +10,7 @@ The purpose of this example code is to illustrate how the Compliance API works a
 
 This Ruby app helps automate real-time requests to the Compliance API. This client will implement the recommended practice of querying the API every ten minutes, with a delay of at least 5 minutes between the end of the time interval and the current time. 
 
-It supports several operational modes:
+It supports two operational modes:
 
 * One-time 'backfill' mode:
    * When a start-time __and__ end-time are provided, the client will manage all Compliance API requests to cover that period.
