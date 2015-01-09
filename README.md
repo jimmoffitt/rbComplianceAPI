@@ -53,7 +53,7 @@ By default the application looks in its local directory for a ```config.yaml fil
 
 As discussed above, start and end time parameters determine the execution behavior of the client application. These time parameters can be specified in the configuration file or passed in via the command-line. More information on their use, and the variety of formats supported for specifying timestamps, is included in the next section.
 
-###Configuration details:
+####Configuration details:
 
   * Account information: __account_name__, __user_name__, and __password__/__password_encypted__ for authentication.
   * Product details: These are optional but they enabled retrieving Compliance data for a specific data stream. If you have a common data store of Twitter data, it is recommended that you make API requests at the account level.
