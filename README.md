@@ -56,7 +56,7 @@ As discussed above, start and end time parameters determine the execution behavi
 ####Configuration details:
 
   * Account information: __account_name__, __user_name__, and __password__/__password_encypted__ for authentication.
-  * Product details: These are optional but they enabled retrieving Compliance data for a specific data stream. If you have a common data store of Twitter data, it is recommended that you make API requests at the account level.
+  * Product details: __product__, __stream_type__, and __label__. These are **optional** but they enabled retrieving Compliance data for a specific data stream. **If you have a common data store of Twitter data, it is recommended that you make API requests at the account level by not specifying these parameters.**
   * Application options:
       * __query_length_in_seconds__: Duration of the Compliance API request, in seconds. The maximum period per request is 10 minutes. Defaults to 600.
       * __out_box__: Directory where Compliance datafiles are written. Defaults to ```./data```. Specified directory is created if neccessary.
