@@ -2,7 +2,7 @@
 
 ### Gnip Compliance API
 
-To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the API can be found at the [Gnip support site](http://support.gnip.com/apis/compliance_api/).
+To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the [Compliance API]((http://support.gnip.com/apis/compliance_api/)) can be found at the [Gnip support site](http://support.gnip.com).
 
 ### So, what does this Compliance API client do?
 
@@ -60,7 +60,7 @@ As discussed above, start and end time parameters determine the execution behavi
       * __out_box__: Directory where Compliance datafiles are written. Defaults to ```./data```. Specified directory is created if neccessary.
       * __ignore_no_results_response__: When set to ```true``` no file is written if there are no Compliance events in API response. When set to false, a file is created even if no events occured during the requested period. Defaults to ```true```.
 
-  * Logging. This Compliance API client includes basic logging support (using the [logging](https://github.com/TwP/logging) Ruby gem), with the following options.
+  * Logging. The client includes basic logging support (using the [logging](https://github.com/TwP/logging) Ruby gem), with the following options.
 
     * __log_file_path__: The path and file name to contain client log entries. Default to ```./compliance_api.log```.
     * __warn_level__: Logging level: debug, info, warn, critical.
