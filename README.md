@@ -23,6 +23,8 @@ It supports several operational modes:
    * Once the Compliance data is caught up, the app continues to run, making Compliance API requests every ten minutes. 
    * Start-time parameter can be provided with a configuration file or via the command-line. 
  
+    **_All timestamps should be in the __UTC__ timezone._**
+
     _Note that if only an end-time is specified, and error will occur._
 
 Currently, Compliance API output can be written to a 'outbox' directory. This directory can be specified in the client configuration file or via the command-line. See below for details on output directories and naming convention.
