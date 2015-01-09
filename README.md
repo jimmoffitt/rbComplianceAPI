@@ -23,13 +23,11 @@ It supports several operational modes:
  
     _Note that if only an end-time is specified, and error will occur._
 
-
-
 Currently, Compliance API output can be written to a 'outbox' directory. This directory can be specified in the client configuration file or via the command-line.
 
 ###Getting started
 
-Have access to Compliance API. This can be tested with a simple cURL command:
+First you should have access to the Gnip Compliance API. This can be tested with a simple cURL command:
 
 ```
    curl -v --compressed -u<USER_NAME> \
@@ -37,12 +35,12 @@ Have access to Compliance API. This can be tested with a simple cURL command:
     ?fromDate=<YYYYMMDDHHMM>&toDate=<YYYYMMDDHHMM>"
 ```
 
-Have the following files in a directory of your choice:
+Second, have the following files in a directory of your choice:
 
 * compliance_api.rb: the 'main' client program that is excuted with various options (see below).
 * pt_restful.rb: a common-code HTTP helper class currently based on the standard Ruby net/https gem.
 * pt_logging: a common-code Logger class currently based on the Ruby 'logging' gem.
-* example_config.yaml: Compliance Client configuration file.
+* config.yaml: Compliance Client configuration file. This file can have any path and file name (needs to be a YAML file however) when you pass that information in as a command-line parameter.
 
 ###Client Configuration
 
@@ -50,17 +48,13 @@ This client application uses a [YAML](http://www.yaml.org/) configuration file f
 
 By default the application looks in its local directory for a ```config.yaml file```. The configuration path and file name can also be passed in via the command-line:
    ```$ruby compliance_api.rb -c "/configs/api/compliance/config.yaml" ```
-   
 
+As discussed above, start and end time parameters determine the execution behavior of the client application. These time parameters can be specified in the configuration file or passed in via the command-line. More information on their use, and the variety of formats supported for specifying timestamps, is included in the next section.
 
-As discussed above, start and end time parameters determine the execution behavior of the client application. These time parameters can More information on their use, and the variety of formats supported for specifying timestamps, is included in the next section.
+###Configuration details:
 
-
-
-Here are some additional configuration details:
-
-  * Account information:
-  * Product details:
+  * Account information: __account_name__, __user_name__, and __password__/__password_encypted__ for authentication.
+  * Product details: These are optional but they enabled retrieving Compliance data for a specific data stream. If you have a common data store of Twitter data, it is recommended that you make API requests at the account level.
   * Application options:
       * __query_length_in_seconds__: Duration of the Compliance API request, in seconds. The maximum period per request is 10 minutes. Defaults to 600.
       * __out_box__: Directory where Compliance datafiles are written. Defaults to ```./data```. Specified directory is created if neccessary.
