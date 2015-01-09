@@ -39,10 +39,10 @@ First you should have access to the Gnip Compliance API. This can be tested with
 
 Second, have the following files in a directory of your choice:
 
-* compliance_api.rb: the 'main' client program that is excuted with various options (see below).
-* pt_restful.rb: a common-code HTTP helper class currently based on the standard Ruby net/https gem.
-* pt_logging: a common-code Logger class currently based on the Ruby 'logging' gem.
-* config.yaml: Compliance Client configuration file. This file can have any path and file name (needs to be a YAML file however) when you pass that information in as a command-line parameter.
+* __compliance_api.rb__: the 'main' client program that is excuted with various options (see below).
+* __pt_restful.rb__: a common-code HTTP helper class currently based on the standard Ruby net/https gem.
+* __pt_logging__: a common-code Logger class currently based on the Ruby 'logging' gem.
+* __config.yaml__: Compliance Client configuration file. This file can have any path and file name (needs to be a YAML file however) when you pass that information in as a command-line parameter.
 
 ###Client Configuration
 
