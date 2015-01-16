@@ -4,11 +4,13 @@
 
 To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the [Compliance API](http://support.gnip.com/apis/compliance_api/) can be found at the [Gnip support site](http://support.gnip.com).
 
+The purpose of this example code is to illustrate how the Compliance API works and provide a starting place for your custom development. With luck it provides the functionality you need 'off-the-shelf.' Most likely you'll decide to extend and customize its behavior.
+
 ### So, what does this Compliance API client do?
 
 This Ruby app helps automate real-time requests to the Compliance API. This client will implement the recommended practice of querying the API every ten minutes, with a delay of at least 5 minutes between the end of the time interval and the current time. 
 
-It supports several operational modes:
+It supports two operational modes:
 
 * One-time 'backfill' mode:
    * When a start-time __and__ end-time are provided, the client will manage all Compliance API requests to cover that period.
@@ -21,9 +23,11 @@ It supports several operational modes:
    * Once the Compliance data is caught up, the app continues to run, making Compliance API requests every ten minutes. 
    * Start-time parameter can be provided with a configuration file or via the command-line. 
  
+    **_All timestamps should be in the UTC timezone._**
+
     _Note that if only an end-time is specified, and error will occur._
 
-Currently, Compliance API output can be written to a 'outbox' directory. This directory can be specified in the client configuration file or via the command-line.
+Currently, Compliance API output can be written to a 'outbox' directory. This directory can be specified in the client configuration file or via the command-line. See below for details on output directories and naming convention.
 
 ###Getting started
 
@@ -37,10 +41,10 @@ First you should have access to the Gnip Compliance API. This can be tested with
 
 Second, have the following files in a directory of your choice:
 
-* compliance_api.rb: the 'main' client program that is excuted with various options (see below).
-* pt_restful.rb: a common-code HTTP helper class currently based on the standard Ruby net/https gem.
-* pt_logging: a common-code Logger class currently based on the Ruby 'logging' gem.
-* config.yaml: Compliance Client configuration file. This file can have any path and file name (needs to be a YAML file however) when you pass that information in as a command-line parameter.
+* __compliance_api.rb__: the 'main' client program that is excuted with various options (see below).
+* __pt_restful.rb__: a common-code HTTP helper class currently based on the standard Ruby net/https gem.
+* __pt_logging__: a common-code Logger class currently based on the Ruby 'logging' gem.
+* __config.yaml__: Compliance Client configuration file. This file can have any path and file name (needs to be a YAML file however) when you pass that information in as a command-line parameter.
 
 ###Client Configuration
 
@@ -51,10 +55,10 @@ By default the application looks in its local directory for a ```config.yaml fil
 
 As discussed above, start and end time parameters determine the execution behavior of the client application. These time parameters can be specified in the configuration file or passed in via the command-line. More information on their use, and the variety of formats supported for specifying timestamps, is included in the next section.
 
-###Configuration details:
+####Configuration details:
 
   * Account information: __account_name__, __user_name__, and __password__/__password_encypted__ for authentication.
-  * Product details: These are optional but they enabled retrieving Compliance data for a specific data stream. If you have a common data store of Twitter data, it is recommended that you make API requests at the account level.
+  * Product details: __product__, __stream_type__, and __label__. These are *optional*, but they enable retrieving Compliance data for specific data products/streams. *If you have a common data store of Twitter data, it is recommended that you make API requests at the account level by not specifying these parameters.*
   * Application options:
       * __query_length_in_seconds__: Duration of the Compliance API request, in seconds. The maximum period per request is 10 minutes. Defaults to 600.
       * __out_box__: Directory where Compliance datafiles are written. Defaults to ```./data```. Specified directory is created if neccessary.
@@ -88,6 +92,7 @@ Usage: compliance_api [options]
 
 ##Specifying Start and End Times
 
+* __start_time__ and __end_time__ are specified in __UTC__. All timestamps included in the Compliance API responses are in __UTC__.
 * Search start-and end-time can be specified in several ways: 
     * standard PowerTrack timestamps (YYYYMMDDHHMM).
     * ISO 8061/Twitter timestamps (2013-11-15T17:16:42.000Z), as "YYYY-MM-DD HH:MM".
@@ -100,6 +105,8 @@ Usage: compliance_api [options]
 * If only an end-time is provided, an error will be thrown.
 
 This Compliance API client writes a 'last time' file in its local directory after every successful Compliance API request. If no 'start-time' is provided when the client starts, it will be set to the timestamp found in the 'last time' file. If the client starts with no start-time parameters, and the 'last time' file is not found, the client will set the 'start-time' to the current time, wait ten minutes, and begin making Compliance API requests.  A 'last time' file is a simple (UTF-8) text file that contains a ```YYYY-MM-DD HH:MM``` timestamp. 
+
+##Output
 
 ##Example Usage
 
