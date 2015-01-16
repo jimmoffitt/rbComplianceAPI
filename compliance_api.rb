@@ -31,8 +31,7 @@ class ComplianceAPIClient
                 :product, :stream_type, :label, #These are currently not in Compliance URI.
 
                 :run_mode,
-                :start_time, :end_time, #Of entire
-                :request_start, :request_end, #Of single Compliance API request.
+                :start_time, :end_time, #Of entire period to fetch Compliance data for.
 
                 :use_start_file, :start_time_file,
                 :query_length, #in seconds.
@@ -98,6 +97,9 @@ class ComplianceAPIClient
     @logger.debug "Running..."
     success = false
     
+    request_start = Time.new
+    request_end = Time.new
+    
     #Convert time strings to Time objects, for math fun.
     if !@start_time.nil? then 
       @start_time =  Time.parse("#{@start_time}Z")
@@ -113,54 +115,54 @@ class ComplianceAPIClient
     if !@start_time.nil? and !@end_time.nil? then
 
       #Check end_time, and correct if neccessary TODO: doc
-      @end_time = Time.now - COMPLIANCE_MIN_LATENCY if @end_time > Time.now - COMPLIANCE_MIN_LATENCY
+      @end_time = Time.now.utc - COMPLIANCE_MIN_LATENCY if @end_time > Time.now.utc - COMPLIANCE_MIN_LATENCY
 
       #Set up initial request.
-      @request_start =  @start_time
-      @request_end = @start_time + @query_length
+      request_start =  @start_time
+      request_end = @start_time + @query_length
       
       #Check end_time, and correct if neccessary TODO: doc
-      @request_end = Time.now - COMPLIANCE_MIN_LATENCY if @request_end > Time.now - COMPLIANCE_MIN_LATENCY
+      @request_end = Time.now - COMPLIANCE_MIN_LATENCY if request_end > Time.now.utc - COMPLIANCE_MIN_LATENCY
 
       #Manage requests for this backfill period.
       while true
-        success = make_request(@request_start, @request_end)
+        success = make_request(request_start, request_end)
         
         if success then 
-          @request_start = @request_end
-          @request_end = @request_start + @query_length
-          if @request_end > @end_time then
-            @request_end = @end_time
+          request_start = request_end
+          request_end = request_start + @query_length
+          if request_end > @end_time then
+            request_end = @end_time
           end
         
-          if @request_start >= @end_time then
+          if request_start >= @end_time then
             break
           end
 
-          @request_end = Time.now - COMPLIANCE_MIN_LATENCY if @request_end > Time.now - COMPLIANCE_MIN_LATENCY
+          request_end = Time.now.utc - COMPLIANCE_MIN_LATENCY if request_end > Time.now.utc - COMPLIANCE_MIN_LATENCY
         end  
       end
     else #Realtime mode.
 
-      @request_start = @start_time
-      @request_end = @start_time + @query_length
+      request_start = @start_time
+      request_end = @start_time + @query_length
 
       #Hold-off if needed before initial run.
-      while Time.now.utc < (@request_end + COMPLIANCE_MIN_LATENCY)
+      while Time.now.utc < (request_end + COMPLIANCE_MIN_LATENCY)
         logger.debug("Too early to run, sleeping #{SLEEP_TIME} seconds...")
         puts "Holding off #{SLEEP_TIME} seconds..."
         sleep SLEEP_TIME
       end
 
       while true
-        success = make_request(@request_start, @request_end)
+        success = make_request(request_start, @request_end)
 
         if success then
-          @request_start = @request_end
-          @request_end = @request_start + @query_length
+          request_start = request_end
+          request_end = request_start + @query_length
         end
 
-        while Time.now.utc < (@request_end + COMPLIANCE_MIN_LATENCY)
+        while Time.now.utc < (request_end + COMPLIANCE_MIN_LATENCY)
           logger.debug("Holding off #{SLEEP_TIME} seconds...")
           puts "Holding off #{SLEEP_TIME} seconds..."
           sleep SLEEP_TIME
@@ -207,8 +209,6 @@ class ComplianceAPIClient
   end
 
   def write_data(response, start_time, end_time)
-    
-    #TODO - add logic/option to not save results if they do not include Compliance events.
     
     if @ignore_no_results_response then #confirm that there are some results...
       if JSON.parse(response)['summary']['totalResults'] == 0 then 
@@ -362,8 +362,8 @@ class ComplianceAPIClient
   #Takes a variety of string inputs and returns a standard PowerTrack YYYYMMDDHHMM timestamp string.
   def set_date_string(input)
 
-    now = Time.new
-    date = Time.new
+    now = Time.new.utc
+    date = Time.new.utc
 
     #Handle minute notation.
     if input.downcase[-1] == "m" then
@@ -398,7 +398,6 @@ class ComplianceAPIClient
       date = Time.parse(input)
       return get_date_string(date)
     end
-
 
     logger.info("ERROR: could not parse 'start_time'. ")
     return 'Error, unrecognized timestamp.'
