@@ -8,7 +8,6 @@ class PTLogging
                 :size, :keep, :roll_by
 
   def initialize
-
     Logging.init :debug, :info, :warn, :error, :critical, :fatal
     @name = 'logger'
     @logger = Logging.logger(@name)
@@ -25,6 +24,7 @@ class PTLogging
 
   def get_logger
     @logger = Logging.logger(@name)
+    @logger.level = 'info'
     @logger.level = @warn_level
 
     layout = Logging.layouts.pattern(:pattern => '[%d] %-5l: %m\n')
@@ -33,7 +33,7 @@ class PTLogging
     default_appender = Logging::Appenders::RollingFile.new 'default', \
          :filename => @log_file_path, :size => (@size * 1024), :keep => @keep, :safe => true, :layout => layout
 
-    @logger.add_appenders(default_appender, Logging.appenders.stdout)
+    #@logger.add_appenders(default_appender, Logging.appenders.stdout)
 
     return @logger
   end
@@ -54,6 +54,9 @@ class PTLogging
     #Config details.
     @log_file_path = config['logging']['log_file_path']
     @warn_level = config['logging']['warn_level']
+    if @warn_level.nil? then
+      @warn_level = 'info'
+    end
     @size = config['logging']['size']
     @keep = config['logging']['keep']
   end
