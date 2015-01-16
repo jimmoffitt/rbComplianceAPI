@@ -33,6 +33,7 @@ class PTLogging
     default_appender = Logging::Appenders::RollingFile.new 'default', \
          :filename => @log_file_path, :size => (@size * 1024), :keep => @keep, :safe => true, :layout => layout
 
+    #Comment this if you don't want log statements written to system out.
     #@logger.add_appenders(default_appender, Logging.appenders.stdout)
 
     return @logger
