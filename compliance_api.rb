@@ -148,23 +148,26 @@ class ComplianceAPIClient
       request_end = @start_time + @query_length
 
       #Hold-off if needed before initial run.
+      
+      logger.info "Too early to run, waiting..." if Time.now.utc < (request_end + COMPLIANCE_MIN_LATENCY)
       while Time.now.utc < (request_end + COMPLIANCE_MIN_LATENCY)
         logger.debug("Too early to run, sleeping #{SLEEP_TIME} seconds...")
-        puts "Holding off #{SLEEP_TIME} seconds..."
+        #puts "Holding off #{SLEEP_TIME} seconds..."
         sleep SLEEP_TIME
       end
 
       while true
-        success = make_request(request_start, @request_end)
+        success = make_request(request_start, request_end)
 
         if success then
           request_start = request_end
           request_end = request_start + @query_length
         end
 
+        logger.info "Waiting to make next request..." if Time.now.utc < (request_end + COMPLIANCE_MIN_LATENCY)
         while Time.now.utc < (request_end + COMPLIANCE_MIN_LATENCY)
           logger.debug("Holding off #{SLEEP_TIME} seconds...")
-          puts "Holding off #{SLEEP_TIME} seconds..."
+          #puts "Holding off #{SLEEP_TIME} seconds..."
           sleep SLEEP_TIME
         end
         
@@ -505,17 +508,7 @@ if __FILE__ == $0  #This script code is executed when running this file.
   #Handle start date.
   #First see if it was passed in
   if !$start_time.nil? then
-
-  #  if $start_time == 'file' then
-  #    oComp.use_start_file = true
-  #    if !File.exist?(oComp.start_time_file)
-  #     oComp.start_time = oComp.set_date_string("#{oComp.initial_go_back}h")
-  #    else
-  #      read_start_time = true
-  #    end
-  #  else
-      oComp.start_time = oComp.set_date_string($start_time)
-  #  end
+    oComp.start_time = oComp.set_date_string($start_time)
   end
 
   #Handle end date.
