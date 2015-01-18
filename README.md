@@ -113,6 +113,13 @@ Currently, this client simply writes the Compliance API responses as json text f
 The client manages the creating of a time-stamped hierachary of output folders.
 
 
+
+```
+ storage: files #options: files, standard_out, database (not implemented yet) 
+ out_box: ./data
+ ignore_no_results_response: true
+```
+
 ##Example Usage
 
 Configuration and rule details can be specified by passing in files or specifying on the command-line, or a combination of both.  Here are some quick example:
