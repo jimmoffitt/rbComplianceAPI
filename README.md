@@ -108,6 +108,11 @@ This Compliance API client writes a 'last time' file in its local directory afte
 
 ##Output
 
+Currently, this client simply writes the Compliance API responses as json text files.
+
+The client manages the creating of a time-stamped hierachary of output folders.
+
+
 ##Example Usage
 
 Configuration and rule details can be specified by passing in files or specifying on the command-line, or a combination of both.  Here are some quick example:
