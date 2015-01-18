@@ -4,11 +4,13 @@
 
 To ensure that the Twitter user's voice is continually respected, Gnip's customers are obligated to maintain compliant data stores... meaning that requests to delete or otherwise alter data are acted on and propagated through the customer's data analysis framework. To enable customers to comply, Gnip provides aa API endpoint from which all compliance data related to a customer's account can be regularly requested. A full description of the [Compliance API](http://support.gnip.com/apis/compliance_api/) can be found at the [Gnip support site](http://support.gnip.com).
 
-The purpose of this example code is to illustrate how the Compliance API works and provide a starting place for your custom development. With luck it provides the functionality you need 'off-the-shelf.' Most likely you'll decide to extend and customize its behavior.
+The purpose of this example code is to illustrate how the Compliance API works and provide a starting place for your custom development. With luck it provides the functionality you need 'off-the-shelf.' Most likely you'll decide to extend and customize its behavior. Maybe you want to write Compliance API data to a database.  Maybe you want to wrap a user-interface around this.
 
 ### So, what does this Compliance API client do?
 
 This Ruby app helps automate real-time requests to the Compliance API. This client will implement the recommended practice of querying the API every ten minutes, with a delay of at least 5 minutes between the end of the time interval and the current time. 
+
+A common use-case of this client will be so simply execute it, have it pick up where it last left off, quickly backfill until it catches up to realtime, then manage Compliance API requests every ten minutes. 
 
 It supports two operational modes:
 
@@ -119,6 +121,8 @@ The client manages the creating of a time-stamped hierachary of output folders.
  out_box: ./data
  ignore_no_results_response: true
 ```
+
+These details are implemented in the ```write_data``` method. 
 
 ##Example Usage
 
