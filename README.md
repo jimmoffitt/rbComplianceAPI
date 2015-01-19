@@ -124,6 +124,9 @@ The client manages the creating of a time-stamped hierachary of output folders.
 
 These details are implemented in the ```write_data``` method. 
 
+rbComplianceAPI/misc/compliance-file-output.png
+
+
 ##Example Usage
 
 Configuration and rule details can be specified by passing in files or specifying on the command-line, or a combination of both.  Here are some quick example:
